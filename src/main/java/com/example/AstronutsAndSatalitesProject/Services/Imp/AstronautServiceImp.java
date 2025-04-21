@@ -1,0 +1,69 @@
+package com.example.AstronutsAndSatalitesProject.Services.Imp;
+
+import com.example.AstronutsAndSatalitesProject.DTO.Request.AstronautRequestDto;
+import com.example.AstronutsAndSatalitesProject.DTO.Response.AstronautResponseDto;
+import com.example.AstronutsAndSatalitesProject.Mapper.AstrnautMapper;
+import com.example.AstronutsAndSatalitesProject.Repository.AstronautRepository;
+import com.example.AstronutsAndSatalitesProject.Services.AstronautService;
+import com.example.AstronutsAndSatalitesProject.modles.Astronaut;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class AstronautServiceImp implements AstronautService {
+
+    private final AstronautRepository astronautRepository;
+    private final AstrnautMapper astronautMapper;
+    private final List<String> validSortFields;
+
+    @Autowired
+    public AstronautServiceImp(AstronautRepository astronautRepository, AstrnautMapper astronautMapper) {
+        this.astronautRepository = astronautRepository;
+        this.astronautMapper = astronautMapper;
+        this.validSortFields = List.of("firstName", "lastName", "experienceYears");
+    }
+
+    @Override
+    public void addNewAstronaut(AstronautRequestDto astronautRequestDto) {
+        Astronaut astronaut = astronautMapper.mapToAstronaut(astronautRequestDto);
+        astronautRepository.save(astronaut);
+    }
+
+    @Override
+    public Page<AstronautResponseDto> getAllAstronauts(int page, int size, String sortField, String direction) {
+        if (!validSortFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field. Allowed values: " + validSortFields);
+        }
+
+        // Validate direction
+        if (!direction.equalsIgnoreCase("asc") && !direction.equalsIgnoreCase("desc")) {
+            throw new IllegalArgumentException("Invalid direction. Use 'asc' or 'desc'");
+        }
+
+        // Validate page and size
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number must be 0 or greater");
+        }
+        if (size < 1) {
+            throw new IllegalArgumentException("Page size must be 1 or greater");
+        }
+
+        // Create pageable with sorting
+        Pageable pageable = (Pageable) PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortField));
+
+        // Get paginated and sorted astronauts
+        Page<Astronaut> astronautPage = astronautRepository.findAll((org.springframework.data.domain.Pageable) pageable);
+
+        // Convert to DTO page
+
+        return astronautPage.map(astronautMapper::mapToAstronautResponseDto);
+
+    }
+}

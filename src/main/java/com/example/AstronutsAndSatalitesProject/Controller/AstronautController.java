@@ -1,0 +1,42 @@
+package com.example.AstronutsAndSatalitesProject.Controller;
+
+import com.example.AstronutsAndSatalitesProject.DTO.Request.AstronautRequestDto;
+import com.example.AstronutsAndSatalitesProject.DTO.Response.AstronautResponseDto;
+import com.example.AstronutsAndSatalitesProject.DTO.Response.PageResponseDto;
+import com.example.AstronutsAndSatalitesProject.Services.AstronautService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/astronauts")
+public class AstronautController {
+
+    private final AstronautService astronautService;
+
+    @Autowired
+    public AstronautController(AstronautService astronautService) {
+        this.astronautService = astronautService;
+    }
+
+    @PostMapping
+    public ResponseEntity<AstronautResponseDto> addNewAstronaut(@RequestBody AstronautRequestDto astronautRequestDto) {
+        astronautService.addNewAstronaut(astronautRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping
+    public ResponseEntity<PageResponseDto<AstronautResponseDto>> getAllAstronauts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "experienceYears") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+
+            Page<AstronautResponseDto> astronautPage = astronautService.getAllAstronauts(page, size, sortBy, direction);
+            return ResponseEntity.ok(PageResponseDto.of(astronautPage));
+
+    }
+}

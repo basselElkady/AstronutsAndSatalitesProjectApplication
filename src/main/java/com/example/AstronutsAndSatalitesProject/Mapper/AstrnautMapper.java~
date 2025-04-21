@@ -1,0 +1,47 @@
+package com.example.AstronutsAndSatalitesProject.Mapper;
+
+import com.example.AstronutsAndSatalitesProject.DTO.Request.AstronautRequestDto;
+import com.example.AstronutsAndSatalitesProject.DTO.Response.AstronautResponseDto;
+import com.example.AstronutsAndSatalitesProject.DTO.Response.SatelliteResponseDto;
+import com.example.AstronutsAndSatalitesProject.modles.Astronaut;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class AstrnautMapper {
+
+    private final SatelliteMapper satelliteMapper
+
+    @Autowired
+    public AstrnautMapper(SatelliteMapper satelliteMapper) {
+        this.satelliteMapper = satelliteMapper;
+    }
+
+    public Astronaut mapToAstronaut(AstronautRequestDto astronautRequestDto) {
+        return new Astronaut(
+                astronautRequestDto.firstName(),
+                astronautRequestDto.lastName(),
+                astronautRequestDto.experienceYears());
+    }
+
+
+    public AstronautResponseDto mapToAstronautResponseDto(Astronaut astronaut) {
+        // we can make this better if we have more time we need to accsess this through service layer to make it better performance with pagable
+
+        List<SatelliteResponseDto> satellites = null;
+        if(!astronaut.getSatellites().isEmpty()){
+            satellites = astronaut.getSatellites().stream().
+                map(satelliteMapper::toSatelliteResponseDto).
+                toList();}
+        return new AstronautResponseDto(
+                astronaut.getId(),
+                astronaut.getFirstName(),
+                astronaut.getLastName(),
+                astronaut.getExperienceYears(),
+                satellites
+        );
+    }
+
+}
